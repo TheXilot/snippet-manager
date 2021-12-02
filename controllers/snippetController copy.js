@@ -14,6 +14,7 @@ class SnippetController {
   async create(req, res) {
     try {
       const { title, description, code } = req.body;
+      console.log(req.body);
       //validation
 
       if (!description && !code) {
