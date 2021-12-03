@@ -18,6 +18,7 @@ app.listen(5000, () => console.log("server on port 5000"));
 //set up routers
 
 app.use("/snippet", require("./routers/snippetRouter"));
+app.use("/auth", require("./routers/userRouter"));
 
 //mongoose connect
 
