@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const User = require("../models/userModel");
-
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 //index,create,update,remove
 class userController {
   // async index(req, res) {
@@ -22,7 +23,7 @@ class userController {
           errorMessage: "you need to enter your email and your password",
         });
       }
-      if (password < 6) {
+      if (password.length < 6) {
         res.status(400).json({
           errorMessage: "password need to be at least 6 caractere",
         });
@@ -41,6 +42,68 @@ class userController {
         });
       }
       //hash the password
+      const salt = await bcrypt.genSalt();
+      const passwordHash = await bcrypt.hash(password, salt);
+      // console.log(passwordHash);
+      const newUser = new User({
+        email,
+        passwordHash,
+      });
+      const savedUser = await newUser.save();
+      // res.send(savedUser);
+
+      //create a JWT Token
+      const token = jwt.sign(
+        {
+          id: savedUser._id,
+        },
+        process.env.JWT_SECRET
+      );
+      res.cookie("token", token, { httpOnly: true }).send();
+    } catch (err) {
+      res.status(500).send();
+    }
+  }
+  async login(req, res) {
+    try {
+      const { email, password } = req.body;
+      console.log(req.body);
+      //basic validation
+      if (!email || !password) {
+        res.status(400).json({
+          errorMessage: "you need to enter your email and your password",
+        });
+      }
+      if (password < 6) {
+        res.status(400).json({
+          errorMessage: "password need to be at least 6 caractere",
+        });
+      }
+      //verification if email exist
+      const existingEmail = await User.findOne({ email: email });
+      if (!existingEmail) {
+        res.status(400).json({
+          errorMessage: "You are not able to connect to this app",
+        });
+      }
+      //verify passwordHash
+      const isCorrectPassword = await bcrypt.compare(
+        password,
+        existingEmail.passwordHash
+      );
+      if (!isCorrectPassword) {
+        res.status(400).json({
+          errorMessage: "Password : You are not able to connect to this app",
+        });
+      }
+      //create a JWT Token
+      const token = jwt.sign(
+        {
+          id: existingEmail._id,
+        },
+        process.env.JWT_SECRET
+      );
+      res.cookie("token", token, { httpOnly: true }).send();
     } catch (err) {
       res.status(500).send();
     }

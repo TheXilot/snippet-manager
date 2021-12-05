@@ -5,6 +5,7 @@ const Snippet = require("../models/snippetModel");
 class SnippetController {
   async index(req, res) {
     try {
+      console.log(req.user);
       const snippets = await Snippet.find();
       res.json(snippets);
     } catch (err) {
@@ -15,6 +16,8 @@ class SnippetController {
     try {
       const { title, description, code } = req.body;
       console.log(req.body);
+      console.log(req.user);
+
       //validation
 
       if (!description && !code) {
@@ -26,6 +29,7 @@ class SnippetController {
         title,
         description,
         code,
+        userId: req.user,
       });
 
       const savedSnippet = await newSnippet.save();
@@ -52,6 +56,11 @@ class SnippetController {
         return res
           .status(400)
           .json({ errorMessage: "no element in database with this id" });
+      if (existingSnippet.userId.toString() !== req.user) {
+        return res
+          .status(400)
+          .json({ errorMessage: "You dont have right to update this element" });
+      }
       existingSnippet.title = title;
       existingSnippet.description = description;
       existingSnippet.code = code;
@@ -75,6 +84,11 @@ class SnippetController {
         return res
           .status(400)
           .json({ errorMessage: "no element in database with this id" });
+      if (existingSnippet.userId.toString() !== req.user) {
+        return res
+          .status(400)
+          .json({ errorMessage: "You dont have right to update this element" });
+      }
       await existingSnippet.delete();
       res.json(existingSnippet);
     } catch (err) {
