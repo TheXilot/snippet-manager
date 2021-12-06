@@ -59,7 +59,9 @@ class userController {
         },
         process.env.JWT_SECRET
       );
-      res.cookie("token", token, { httpOnly: true }).send();
+      res
+        .cookie("token", token, { httpOnly: true, withCredentials: true })
+        .send();
     } catch (err) {
       res.status(500).send();
     }
@@ -103,9 +105,23 @@ class userController {
         },
         process.env.JWT_SECRET
       );
-      res.cookie("token", token, { httpOnly: true }).send();
+      res
+        .cookie("token", token, { httpOnly: true, withCredentials: true })
+        .send();
     } catch (err) {
       res.status(500).send();
+    }
+  }
+  async loggedIn(req, res) {
+    try {
+      //create a JWT Token
+      const token = req.cookies.token;
+      if (!token)
+        return res.status(401).json({ errorMessage: "Unautorized !" });
+      const validatedUser = jwt.verify(token, process.env.JWT_SECRET);
+      return res.json(validatedUser.id);
+    } catch (err) {
+      return res.json(null);
     }
   }
   // async update(req, res) {
