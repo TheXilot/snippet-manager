@@ -107,7 +107,7 @@ class userController {
       );
       res
         .cookie("token", token, { httpOnly: true, withCredentials: true })
-        .send();
+        .send(token);
     } catch (err) {
       res.status(500).send();
     }
