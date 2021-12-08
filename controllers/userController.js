@@ -124,6 +124,13 @@ class userController {
       return res.json(null);
     }
   }
+  async logOut(req, res) {
+    try {
+      res.clearCookie("token").send();
+    } catch (err) {
+      return res.json(err);
+    }
+  }
   // async update(req, res) {
   //   try {
   //     const userId = req.params.id;

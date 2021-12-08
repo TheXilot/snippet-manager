@@ -7,6 +7,7 @@ const router = require("express").Router();
 router.post("/", userController.create);
 router.post("/login", userController.login);
 router.get("/loggedIn", userController.loggedIn);
+router.get("/logout", userController.logOut);
 // router.put("/:id", snippetController.update);
 // router.delete("/:id", snippetController.remove);
 
