@@ -102,6 +102,8 @@ class userController {
       const token = jwt.sign(
         {
           id: existingEmail._id,
+          email: existingEmail.email,
+          picture: null,
         },
         process.env.JWT_SECRET
       );
@@ -119,7 +121,7 @@ class userController {
       if (!token)
         return res.status(401).json({ errorMessage: "Unautorized !" });
       const validatedUser = jwt.verify(token, process.env.JWT_SECRET);
-      return res.json(validatedUser.id);
+      return res.json(validatedUser);
     } catch (err) {
       return res.json(null);
     }
