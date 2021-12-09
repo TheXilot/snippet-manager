@@ -4,15 +4,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 //index,create,update,remove
 class userController {
-  // async index(req, res) {
-  //   try {
-  //     const users = await user.find();
-  //     res.json(users);
-  //   } catch (err) {
-  //     res.status(500).send();
-  //   }
-  // }
-
   async create(req, res) {
     try {
       const { email, password, passwordVerify } = req.body;
@@ -133,34 +124,70 @@ class userController {
       return res.json(err);
     }
   }
-  // async update(req, res) {
-  //   try {
-  //     const userId = req.params.id;
-  //     const { title, description, code } = req.body;
-  //     //validation
-  //     if (!description && !code) {
-  //       res.status(400).json({
-  //         errorMessage: "you need to enter at least a description or some code",
-  //       });
-  //     }
-  //     if (!userId)
-  //       return res.status(400).json({ errorMessage: "Id Not Found" });
-  //     const existinguser = await user.findById(userId);
-  //     if (!existinguser)
-  //       return res
-  //         .status(400)
-  //         .json({ errorMessage: "no element in database with this id" });
-  //     existinguser.title = title;
-  //     existinguser.description = description;
-  //     existinguser.code = code;
-  //     const saveduser = await existinguser.save();
-  //     res.json(saveduser);
-  //   } catch (err) {
-  //     console.log(err);
-  //     res.status(500).send();
-  //   }
-  // }
+  async update(req, res) {
+    try {
+      const userId = req.params.id;
+      const { email, fullName, experience, competence, picture } = req.body;
+      //validation
+      //is valid user
+      if (!userId)
+        return res.status(400).json({ errorMessage: "Id Not Found" });
+      //email
+      if (!email) {
+        res.status(400).json({
+          errorMessage: "you need to enter at least a description or some code",
+        });
+      }
+      //fullName
+      if (!fullName)
+        return res
+          .status(400)
+          .json({ errorMessage: "you must enter full name" });
+      //find user by id
+      const existinguser = await user.findById(userId);
+      if (!existinguser)
+        return res
+          .status(400)
+          .json({ errorMessage: "no element in database with this id" });
+      //verify if email was changed
+      if (existinguser.email !== email) {
+        const isNotAvalaible = await User.find({ email: email });
+        if (isNotAvalaible)
+          return res
+            .status(400)
+            .json({ errorMessage: "Please enter another mail !" });
+        existinguser.email = email;
+      }
+      existinguser.fullName = fullName;
+      existinguser.experience = experience;
+      existinguser.competence = competence;
+      //picture
 
+      const saveduser = await existinguser.save();
+      res.json(saveduser);
+    } catch (err) {
+      console.log(err);
+      res.status(500).send();
+    }
+  }
+  async indexByOne(req, res) {
+    console.log(req.params.id);
+    try {
+      const userId = req.params.id;
+      if (!userId)
+        return res.status(400).json({ errorMessage: "Id Not Found" });
+      const existinguser = await User.findById(userId).select("-passwordHash");
+      if (!existinguser)
+        return res
+          .status(400)
+          .json({ errorMessage: "no element in database with this id" });
+      console.log(existinguser);
+      res.json(existinguser);
+    } catch (err) {
+      console.log(err);
+      res.status(500).send();
+    }
+  }
   // async remove(req, res) {
   //   try {
   //     const userId = req.params.id;
