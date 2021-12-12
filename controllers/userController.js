@@ -6,12 +6,25 @@ const jwt = require("jsonwebtoken");
 class userController {
   async create(req, res) {
     try {
-      const { email, password, passwordVerify } = req.body;
+      const {
+        fullName,
+        experience,
+        competence,
+        picture,
+        email,
+        password,
+        passwordVerify,
+      } = req.body;
       console.log(req.body);
       //basic validation
       if (!email || !password || !passwordVerify) {
         res.status(400).json({
           errorMessage: "you need to enter your email and your password",
+        });
+      }
+      if (!fullName) {
+        res.status(400).json({
+          errorMessage: "you need to enter your Name",
         });
       }
       if (password.length < 6) {
@@ -37,6 +50,10 @@ class userController {
       const passwordHash = await bcrypt.hash(password, salt);
       // console.log(passwordHash);
       const newUser = new User({
+        fullName,
+        experience,
+        competence,
+        picture,
         email,
         passwordHash,
       });
@@ -93,11 +110,16 @@ class userController {
       const token = jwt.sign(
         {
           id: existingEmail._id,
+          fullName: existingEmail.fullName,
+          experience: existingEmail.experience,
+          competence: existingEmail.competence,
           email: existingEmail.email,
-          picture: null,
+          picture: existingEmail.picture,
         },
         process.env.JWT_SECRET
       );
+      const validatedUser = jwt.verify(token, process.env.JWT_SECRET);
+      console.log(validatedUser);
       res
         .cookie("token", token, { httpOnly: true, withCredentials: true })
         .send(token);
@@ -112,6 +134,7 @@ class userController {
       if (!token)
         return res.status(401).json({ errorMessage: "Unautorized !" });
       const validatedUser = jwt.verify(token, process.env.JWT_SECRET);
+      // console.log(validatedUser);
       return res.json(validatedUser);
     } catch (err) {
       return res.json(null);
@@ -144,7 +167,7 @@ class userController {
           .status(400)
           .json({ errorMessage: "you must enter full name" });
       //find user by id
-      const existinguser = await user.findById(userId);
+      const existinguser = await User.findById(userId).select("-passwordHash");
       if (!existinguser)
         return res
           .status(400)
@@ -164,7 +187,24 @@ class userController {
       //picture
 
       const saveduser = await existinguser.save();
-      res.json(saveduser);
+      //generate new token
+      const token = jwt.sign(
+        {
+          id: saveduser._id,
+          fullName: saveduser.fullName,
+          experience: saveduser.experience,
+          competence: saveduser.competence,
+          email: saveduser.email,
+          picture: saveduser.picture,
+        },
+        process.env.JWT_SECRET
+      );
+      // saveduser.id = saveduser._id.value;
+      // saveduser.id = saveduser._id;
+      // console.log("saveduser : ", saveduser);
+      res
+        .cookie("token", token, { httpOnly: true, withCredentials: true })
+        .json({ saveduser, token });
     } catch (err) {
       console.log(err);
       res.status(500).send();
