@@ -159,15 +159,10 @@ class userController {
     try {
       await uploadFile(req, res);
       console.log(req.file);
-      if (req.file == undefined) {
-        return res.status(400).send({ message: "Please upload a file!" });
-      }
-
-      res.status(200).send({
-        message: "Uploaded the file successfully: " + req.file.originalname,
-      });
-
-      return;
+      // if (req.file == undefined) {
+      //   return res.status(400).send({ message: "Please upload a file!" });
+      // }
+      console.log("name :", req.file.originalname);
       const userId = req.params.id;
       const {
         email,
@@ -213,6 +208,8 @@ class userController {
       existinguser.competence = competence;
       existinguser.location = location;
       existinguser.education = education;
+      if (req.file) existinguser.picture = req.file.path;
+
       //picture
 
       const saveduser = await existinguser.save();
@@ -238,7 +235,8 @@ class userController {
         .json({ saveduser, token });
     } catch (err) {
       console.log(err);
-      res.status(500).send();
+      res.status(500).json({ errorMessage: err.message });
+      // res.status(500).send();
     }
   }
   async indexByOne(req, res) {

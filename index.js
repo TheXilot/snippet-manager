@@ -18,6 +18,7 @@ app.use(
   })
 );
 app.use(cookieParser());
+app.use("/upload", express.static("upload"));
 // app.use(fileupload());
 app.listen(5000, () => console.log("server on port 5000"));
 
