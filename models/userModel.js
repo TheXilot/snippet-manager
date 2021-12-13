@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema(
     fullName: { type: String, required: true },
     experience: { type: String },
     competence: { type: String },
+    education: { type: String },
+    location: { type: String },
     picture: { type: String },
     passwordHash: { type: String, required: true },
   },

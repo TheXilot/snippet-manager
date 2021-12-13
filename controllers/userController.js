@@ -2,6 +2,8 @@ const router = require("express").Router();
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const uploadFile = require("../middleware/upload");
+
 //index,create,update,remove
 class userController {
   async create(req, res) {
@@ -10,6 +12,8 @@ class userController {
         fullName,
         experience,
         competence,
+        education,
+        location,
         picture,
         email,
         password,
@@ -53,6 +57,8 @@ class userController {
         fullName,
         experience,
         competence,
+        education,
+        location,
         picture,
         email,
         passwordHash,
@@ -81,19 +87,19 @@ class userController {
       //basic validation
       if (!email || !password) {
         res.status(400).json({
-          errorMessage: "you need to enter your email and your password",
+          errorMessage: "vous devez saisir votre Email",
         });
       }
       if (password < 6) {
         res.status(400).json({
-          errorMessage: "password need to be at least 6 caractere",
+          errorMessage: "Le mot de passe doit être superieur a 6 caractere",
         });
       }
       //verification if email exist
       const existingEmail = await User.findOne({ email: email });
       if (!existingEmail) {
         res.status(400).json({
-          errorMessage: "You are not able to connect to this app",
+          errorMessage: "Verifiez votre Email ou mot de passe !",
         });
       }
       //verify passwordHash
@@ -103,16 +109,18 @@ class userController {
       );
       if (!isCorrectPassword) {
         res.status(400).json({
-          errorMessage: "Password : You are not able to connect to this app",
+          errorMessage: "Verifiez votre Email ou mot de passe !",
         });
       }
       //create a JWT Token
       const token = jwt.sign(
         {
-          id: existingEmail._id,
+          _id: existingEmail._id,
           fullName: existingEmail.fullName,
           experience: existingEmail.experience,
           competence: existingEmail.competence,
+          education: existingEmail.education,
+          location: existingEmail.location,
           email: existingEmail.email,
           picture: existingEmail.picture,
         },
@@ -149,8 +157,27 @@ class userController {
   }
   async update(req, res) {
     try {
+      await uploadFile(req, res);
+      console.log(req.file);
+      if (req.file == undefined) {
+        return res.status(400).send({ message: "Please upload a file!" });
+      }
+
+      res.status(200).send({
+        message: "Uploaded the file successfully: " + req.file.originalname,
+      });
+
+      return;
       const userId = req.params.id;
-      const { email, fullName, experience, competence, picture } = req.body;
+      const {
+        email,
+        fullName,
+        experience,
+        competence,
+        education,
+        location,
+        picture,
+      } = req.body;
       //validation
       //is valid user
       if (!userId)
@@ -158,42 +185,46 @@ class userController {
       //email
       if (!email) {
         res.status(400).json({
-          errorMessage: "you need to enter at least a description or some code",
+          errorMessage: "Vous devez saisir votre Email",
         });
       }
       //fullName
       if (!fullName)
         return res
           .status(400)
-          .json({ errorMessage: "you must enter full name" });
+          .json({ errorMessage: "Vous devez saisir votre Nom Complet" });
       //find user by id
       const existinguser = await User.findById(userId).select("-passwordHash");
       if (!existinguser)
         return res
           .status(400)
-          .json({ errorMessage: "no element in database with this id" });
+          .json({ errorMessage: "Utilisateur inexistant!" });
       //verify if email was changed
       if (existinguser.email !== email) {
         const isNotAvalaible = await User.find({ email: email });
         if (isNotAvalaible)
           return res
             .status(400)
-            .json({ errorMessage: "Please enter another mail !" });
+            .json({ errorMessage: "Cet email est déja existant !" });
         existinguser.email = email;
       }
       existinguser.fullName = fullName;
       existinguser.experience = experience;
       existinguser.competence = competence;
+      existinguser.location = location;
+      existinguser.education = education;
       //picture
 
       const saveduser = await existinguser.save();
       //generate new token
       const token = jwt.sign(
         {
-          id: saveduser._id,
+          _id: saveduser._id,
           fullName: saveduser.fullName,
           experience: saveduser.experience,
           competence: saveduser.competence,
+          education: saveduser.education,
+          location: saveduser.location,
           email: saveduser.email,
           picture: saveduser.picture,
         },
@@ -215,12 +246,12 @@ class userController {
     try {
       const userId = req.params.id;
       if (!userId)
-        return res.status(400).json({ errorMessage: "Id Not Found" });
+        return res.status(400).json({ errorMessage: "Id introuvable" });
       const existinguser = await User.findById(userId).select("-passwordHash");
       if (!existinguser)
         return res
           .status(400)
-          .json({ errorMessage: "no element in database with this id" });
+          .json({ errorMessage: "Aucun utilisateur avec ce identifiant" });
       console.log(existinguser);
       res.json(existinguser);
     } catch (err) {

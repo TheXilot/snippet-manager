@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const fileupload = require("express-fileupload");
+// const fileupload = require("express-fileupload");
+// const multer = require("multer");
 //dotenv
 dotenv.config();
 //set up express server
@@ -17,7 +18,7 @@ app.use(
   })
 );
 app.use(cookieParser());
-app.use(fileupload());
+// app.use(fileupload());
 app.listen(5000, () => console.log("server on port 5000"));
 
 //set up routers
