@@ -6,6 +6,7 @@ const {
   update,
   indexByOne,
 } = require("../controllers/userController");
+const auth = require("../middleware/auth");
 
 const router = require("express").Router();
 // const snippetController = require("../controllers/snippetController");
@@ -15,8 +16,8 @@ router.post("/", create);
 router.post("/login", login);
 router.get("/loggedIn", loggedIn);
 router.get("/logout", logOut);
-router.put("/:id", update);
-router.get("/:id", indexByOne);
+router.put("/:id", auth, update);
+router.get("/:id", auth, indexByOne);
 // router.delete("/:id", snippetController.remove);
 
 module.exports = router;

@@ -7,6 +7,8 @@ const uploadFile = require("../middleware/upload");
 //index,create,update,remove
 class userController {
   async create(req, res) {
+    await uploadFile(req, res);
+    console.log(req.file);
     try {
       const {
         fullName,
@@ -162,7 +164,6 @@ class userController {
       // if (req.file == undefined) {
       //   return res.status(400).send({ message: "Please upload a file!" });
       // }
-      console.log("name :", req.file.originalname);
       const userId = req.params.id;
       const {
         email,
