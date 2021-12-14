@@ -9,6 +9,7 @@ class userController {
   async create(req, res) {
     await uploadFile(req, res);
     console.log(req.file);
+    let picture = undefined;
     try {
       const {
         fullName,
@@ -16,7 +17,6 @@ class userController {
         competence,
         education,
         location,
-        picture,
         email,
         password,
         passwordVerify,
@@ -55,6 +55,7 @@ class userController {
       const salt = await bcrypt.genSalt();
       const passwordHash = await bcrypt.hash(password, salt);
       // console.log(passwordHash);
+      if (req.file) picture = req.file.path;
       const newUser = new User({
         fullName,
         experience,
@@ -75,11 +76,10 @@ class userController {
         },
         process.env.JWT_SECRET
       );
-      res
-        .cookie("token", token, { httpOnly: true, withCredentials: true })
-        .send();
+      res.status(200).json("ok");
+      // .cookie("token", token, { httpOnly: true, withCredentials: true })
     } catch (err) {
-      res.status(500).send();
+      res.status(500).json({ errorMessage: err.message });
     }
   }
   async login(req, res) {
@@ -256,6 +256,26 @@ class userController {
     } catch (err) {
       console.log(err);
       res.status(500).send();
+    }
+  }
+  async index(req, res) {
+    try {
+      const columns = [
+        "email",
+        "fullName",
+        "experience",
+        "competence",
+        "education",
+        "location",
+        "picture",
+      ];
+      const users = await User.find().select(
+        "email fullName experience competence education location picture"
+      );
+      res.json(users);
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ errorMessage: err });
     }
   }
   // async remove(req, res) {
