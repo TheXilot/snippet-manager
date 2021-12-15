@@ -260,6 +260,18 @@ class userController {
   }
   async index(req, res) {
     try {
+      // query: {
+      //   search: 'add',
+      //   sort_field: 'email',
+      //   sort_order: 'asc',
+      //   per_page: '10',
+      //   page: '1'
+      // },
+      const { search, sort_order } = req.query;
+      const per_page = parseInt(req.query.per_page);
+      const page = parseInt(req.query.page);
+      let sort_field = `${req.query.sort_field}`;
+      if (sort_order !== "asc") sort_field = `-${req.query.sort_field}`;
       const columns = [
         "email",
         "fullName",
@@ -269,10 +281,48 @@ class userController {
         "location",
         "picture",
       ];
-      const users = await User.find().select(
-        "email fullName experience competence education location picture"
-      );
-      res.json(users);
+      const rgx = (pattern) => new RegExp(`.*${pattern}.*`, "i");
+      const regex = rgx(search);
+      const meta = await User.find({
+        $or: [
+          {
+            email: regex,
+          },
+          { fullName: regex },
+          { experience: regex },
+          { competence: regex },
+          { education: regex },
+          { location: regex },
+        ],
+      });
+      const nbElements = meta.length;
+      if (!nbElements) res.json({ data: [], nbElements: 0, nbPage: 0 });
+      const nbPage =
+        nbElements % per_page === 0
+          ? nbElements / per_page
+          : Math.floor(nbElements / per_page) + 1;
+      const users = await User.find({
+        $or: [
+          {
+            email: regex,
+          },
+          { fullName: regex },
+          { experience: regex },
+          { competence: regex },
+          { education: regex },
+          { location: regex },
+        ],
+      })
+        .skip(per_page * page - per_page)
+        .limit(parseInt(per_page))
+        .sort(sort_field)
+        .select(
+          "email fullName experience competence education location picture"
+        );
+      // const users = await User.find().select(
+      //   "email fullName experience competence education location picture"
+      // );
+      res.json({ data: users, nbElements: nbElements, nbPage: nbPage });
     } catch (err) {
       console.log(err);
       res.status(500).json({ errorMessage: err });
